@@ -331,18 +331,21 @@ like = sampler.flatlnprobability
 arr = dat
 if fehon == 1:
     if nvar == 6:
-        fig = corner.corner(arr[:,0:nvar], labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$',r'$f$'], show_titles=True, title_kwargs={"fontsize": 11},title_fmt='.4f')
-        pp = PdfPages('output_params_5feh.pdf')
+        labels = [r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$',r'$f$']
+        pdfname = 'output_params_5feh.pdf'
     if nvar == 5:
-        fig = corner.corner(arr[:,0:nvar], labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$f$'], show_titles=True, title_kwargs={"fontsize": 11},title_fmt='.4f')
-        pp = PdfPages('output_params_4feh.pdf')
+        labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$f$']
+        pdfname = 'output_params_4feh.pdf')
 if fehon == 0:
     if nvar == 5:
-        fig = corner.corner(arr[:,0:nvar], labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$'], show_titles=True, title_kwargs={"fontsize": 11},title_fmt='.4f')
-        pp = PdfPages('output_params_5.pdf')
+        labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$']
+        pdfname= 'output_params_5.pdf'
     if nvar == 4:
-        fig = corner.corner(arr[:,0:nvar], labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$'], show_titles=True, title_kwargs={"fontsize": 11},title_fmt='.4f')
-        pp = PdfPages('output_params_4.pdf')
+        labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$']
+        pdfname = 'output_params_4.pdf'
+
+fig = corner.corner(arr[:,0:nvar], labels=labels, show_titles=True, title_kwargs={"fontsize": 11},title_fmt='.4f',quantiles=(0.16, 0.84), levels=[(1-np.exp(-0.5)),(1-np.exp(-2)),(1-np.exp(-4.5))])
+pp = PdfPages(pdfname)
 pp.savefig(fig)
 pp.close()
 
