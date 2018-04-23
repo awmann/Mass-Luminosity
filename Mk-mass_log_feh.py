@@ -35,7 +35,7 @@ pi = 3.14159
 
 # In[ ]:
 
-nbin = 58 ## number of binaries in sample
+nbin = 60 ## number of binaries in sample
 #nvar = 5
 #fehon = 1 ## turn on Fe/H fit
 print nvar,fehon,smallstep,bigstep
@@ -335,7 +335,7 @@ if fehon == 1:
         pdfname = 'output_params_5feh.pdf'
     if nvar == 5:
         labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$f$']
-        pdfname = 'output_params_4feh.pdf')
+        pdfname = 'output_params_4feh.pdf'
 if fehon == 0:
     if nvar == 5:
         labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$']
