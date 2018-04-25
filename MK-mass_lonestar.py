@@ -10,8 +10,10 @@ import scipy.optimize as op
 
 #import pyfits
 
+## nvar fehon smallstep largestep threads
+
 smallstep = 10000
-bigstep =  500000
+bigstep =  600000
 
 nvar = int(sys.argv[1])
 fehon = int(sys.argv[2])
@@ -19,8 +21,9 @@ fehon = int(sys.argv[2])
 if len(sys.argv) >= 5:
     smallstep = float(sys.argv[3])
     bigstep = float(sys.argv[4])
-
 threads = 48
+if len(sys.argv) >= 6:
+    threads = int(sys.argv[5])
 
 if smallstep >= bigstep:
     tmp = bigstep
@@ -38,10 +41,10 @@ pi = 3.14159
 
 # In[ ]:
 
-nbin = 60 ## number of binaries in sample
+nbin = 61 ## number of binaries in sample
 #nvar = 5
 #fehon = 1 ## turn on Fe/H fit
-print nvar,fehon,smallstep,bigstep
+print nvar,fehon,smallstep,bigstep,threads
 
 ## read in delK, parallax
 delk = np.zeros(nbin)
@@ -148,10 +151,10 @@ model_err = np.sqrt(mass1_err**2+mass2_err**2)
 model_err2 = np.sqrt(mass1_err**2+mass2_err**2)#+(scat*mass1)**2+(scat*mass2)**2 )
 model = mass1+mass2
 
-#for i in range(0,len(empmass)):
-#    print "{:10s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),"{0:.3f}".format(100*model_err[i]/model[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)),     "{0:.2f}".format(feh[i])
+for i in range(0,len(empmass)):
+    print "{:10s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),"{0:.3f}".format(100*model_err[i]/model[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)),     "{0:.2f}".format(feh[i])
     
-print 'rought rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.)
+print 'rough rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.)
 
 
 # In[ ]:
@@ -180,22 +183,20 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon):
     if fehon == 1:
         mass1*=(1+theta[nvar-1])
         mass2*=(1+theta[nvar-1])
-    #mass1 = (10.0**(a + b*mka + c*mka**2. + d*mka**3. + e*mka**4.))*(1+f*feh)
-    #mass2 = (10.0**(a + b*mkb + c*mkb**2. + d*mkb**3. + e*mkb**4.))*(1+f*feh)
+    if theta[0] > 1:
+        print theta[0:nvar]
     if np.min(mass1) <= 0 or np.min(mass2) <= 0:
         return -np.inf
     
     ## this is where we check to see if the relation always does brighter=higher mass (if not return -np.inf)
-    mk = np.linspace(4.2,11.2,100) - zp
+    mk = np.linspace(4.15,11.25,100) - zp
     tmp = mk*0
     for ii in range(nvar-fehon):
         tmp += theta[ii]*mk**ii
     l = 10.0**tmp
-    #l = 10.0**(a + b*mk + c*mk**2. + d*mk**3. + e*mk**4.)
     check = all(l[i] >= l[i+1] for i in xrange(len(l)-1))
     if not check:
         return -np.inf
-    ## there's a better way to do this... probably to check to see if the slope goes negative
 
     mka_err = ekp
     mkb_err = eks
@@ -206,6 +207,7 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon):
         factor2 += ii*theta[ii]*mkb**(ii-1)
     mass1_err = np.abs((np.log(10.)*(factor1))*mass1*mka_err)
     mass2_err = np.abs((np.log(10.)*(factor2))*mass2*mkb_err)
+    #print mass1_err[0]
     
     model_err = np.sqrt(mass1_err**2+mass2_err**2)
     model = mass1+mass2
@@ -249,7 +251,7 @@ print lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon)
 
 start_time = time.time()
 print time.strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-ndim, nwalkers = result.size, 600
+ndim, nwalkers = result.size, 800
 pos = [result + 1e-2*result*np.random.randn(ndim) for i in range(nwalkers)]
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, 
                                 args=(plxval, plxprior, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon),
@@ -278,7 +280,7 @@ print np.mean(arr[:,nvar-1]), np.std(arr[:,nvar-1])
 sampler.reset()
 start_time = time.time()
 nsteps = bigstep
-thin = 100
+thin = 500
 kwargs = {'thin': thin}
 print 'Starting run!'
 for i, result in enumerate(sampler.sample(pos, iterations=nsteps, **kwargs)):
@@ -294,10 +296,11 @@ short = sampler.chain[:,:,0:nvar]
 adder = ''
 if fehon == 1: adder = '_feh'
 ## save out the relevant chains
-np.save('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_short.fits', np.array(short))
-np.save('Mk-Mass_log_emcee'+str(nvar-1)+adder+'.fits', np.array(sampler.chain))
-np.save('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_lnprob.fits', np.array(sampler.lnprobability))
-np.save('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_accept.fits',np.array(sampler.acceptance_fraction))
+np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
+np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
+np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
+np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
+np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
 
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_short.fits', short, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'.fits', sampler.chain, clobber=True)
