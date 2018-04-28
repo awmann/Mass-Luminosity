@@ -10,11 +10,11 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*.npy"))
 
-for i in list:
-    tmp = np.load(i)
-    file = i.replace('.npy','.fits')
-    print file
-    pyfits.writeto(file, tmp, clobber=True)
+#for i in list:
+#    tmp = np.load(i)
+#    file = i.replace('.npy','.fits')
+#    print file
+#    pyfits.writeto(file, tmp, clobber=True)
 
 
 ## this part makes plots
@@ -27,24 +27,24 @@ for i in list:
     print i
     pdfname = 'fail'
     if i.find("feh") != -1:
-        if i.find("5") != -1:
-            labels = [r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$',r'$f$']
+        if i.find("6") != -1:
+            labels = [r'$a_0$',r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$f$']
             pdfname = 'output_params_5feh.pdf'
             flat = flat[:,0:6]
             #flat = np.reshape(sample,(3000000,6))
-        if i.find("4") != -1:
-            labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$f$']
+        if i.find("5") != -1:
+            labels=[r'$a_0$',r'$a_1$',r'$a_2$',r'$a_3$',r'$f$']
             pdfname = 'output_params_4feh.pdf'
             flat = flat[:,0:5]
             #flat = np.reshape(sample,(3000000,5))
     else:
-        if i.find("3") != -1:
-            labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$']
+        if i.find("4") != -1:
+            labels=[r'$a_0$',r'$a_1$',r'$a_2$',r'$a_3$']
             pdfname= 'output_params_4.pdf'
             flat = flat[:,0:4]
             #flat = np.reshape(sample,(3000000,5))
-        if i.find("4") != -1:
-            labels=[r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$',r'$a_5$']
+        if i.find("5") != -1:
+            labels=[r'$a_0$',r'$a_1$',r'$a_2$',r'$a_3$',r'$a_4$']
             pdfname = 'output_params_5.pdf'
             flat = flat[:,0:5]
             #flat = np.reshape(sample,(3000000,5))

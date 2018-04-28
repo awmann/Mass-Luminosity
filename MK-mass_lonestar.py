@@ -181,10 +181,10 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon):
     mass1 = 10.0**(factor1)
     mass2 = 10.0**(factor2)
     if fehon == 1:
-        mass1*=(1+theta[nvar-1])
-        mass2*=(1+theta[nvar-1])
-    if theta[0] > 1:
-        print theta[0:nvar]
+        mass1*=(1+theta[nvar-1]*feh)
+        mass2*=(1+theta[nvar-1]*feh)
+    #if theta[0] > 1:
+    #    print theta[0:nvar]
     if np.min(mass1) <= 0 or np.min(mass2) <= 0:
         return -np.inf
     
@@ -296,11 +296,12 @@ short = sampler.chain[:,:,0:nvar]
 adder = ''
 if fehon == 1: adder = '_feh'
 ## save out the relevant chains
-np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
-np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
-np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
-np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
-np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
+if bigstep > 10000:
+    np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
+    np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
+    np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
+    np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
+    np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
 
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_short.fits', short, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'.fits', sampler.chain, clobber=True)
