@@ -8,17 +8,18 @@ import matplotlib
 import corner
 from matplotlib.backends.backend_pdf import PdfPages
 
-list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*.npy"))
+list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML2/*.npy"))
 
-#for i in list:
-#    tmp = np.load(i)
-#    file = i.replace('.npy','.fits')
-#    print file
-#    pyfits.writeto(file, tmp, clobber=True)
+for i in list:
+    tmp = np.load(i)
+    file = i.replace('.npy','.fits')
+    print file
+    pyfits.writeto(file, tmp, clobber=True)
 
 
 ## this part makes plots
-list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*flat.npy"))
+#list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*flat.npy"))
+list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML2/*flat.npy"))
 #list2 = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*s.fits.npy"))
 #list = [list1,list2]
 #print list
