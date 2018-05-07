@@ -42,8 +42,9 @@ pi = 3.14159
 
 
 # In[ ]:
-
-nbin = 61 ## number of binaries in sample
+num_lines = sum(1 for line in open('data2.txt'))
+print num_lines
+nbin = num_lines-1 ## number of binaries in sample
 #nvar = 5
 #fehon = 1 ## turn on Fe/H fit
 print nvar,fehon,smallstep,bigstep,threads
@@ -178,16 +179,16 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon):
     mka = kp - 5.0*(np.log10(1000.0/mplx)-1.) - zp
     mkb = ks - 5.0*(np.log10(1000.0/mplx)-1.) - zp
     ## assuming all powers:
-    #factor1 = mka*0
-    #factor2 = mkb*0
-    #for ii in range(nvar-fehon):
-    #    factor1 += theta[ii]*mka**(ii)
-    #    factor2 += theta[ii]*mkb**(ii)
-    factor1 = theta[0]+mka*0.#mka*0
-    factor2 = theta[0]+mkb*0.#mkb*0
-    for ii in range(nvar-fehon-1):
-        factor1 += theta[ii+1]*mka**(ii*2+1)
-        factor2 += theta[ii+1]*mkb**(ii*2+1)
+    factor1 = mka*0
+    factor2 = mkb*0
+    for ii in range(nvar-fehon):
+        factor1 += theta[ii]*mka**(ii)
+        factor2 += theta[ii]*mkb**(ii)
+    #factor1 = theta[0]+mka*0.#mka*0
+    #factor2 = theta[0]+mkb*0.#mkb*0
+    #for ii in range(nvar-fehon-1):
+    #    factor1 += theta[ii+1]*mka**(ii*2+1)
+    #    factor2 += theta[ii+1]*mkb**(ii*2+1)
     mass1 = 10.0**(factor1)
     mass2 = 10.0**(factor2)
     if fehon == 1:
@@ -199,28 +200,28 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon):
         return -np.inf
     
     ## this is where we check to see if the relation always does brighter=higher mass (if not return -np.inf)
-    #mk = np.linspace(4.15,11.25,100) - zp
-    #tmp = mk*0
-    #for ii in range(nvar-fehon):
-    #    tmp += theta[ii]*mk**ii
+    mk = np.linspace(4.15,11.25,100) - zp
+    tmp = mk*0
+    for ii in range(nvar-fehon):
+        tmp += theta[ii]*mk**ii
     #tmp = theta[0]+mk*0.
     #for ii in range(nvar-fehon):
     #    tmp += theta[ii]*mk**(ii*2+1)
-    #l = 10.0**tmp
-    #check = all(l[i] >= l[i+1] for i in xrange(len(l)-1))
-    #if not check:
-    #    return -np.inf
+    l = 10.0**tmp
+    check = all(l[i] >= l[i+1] for i in xrange(len(l)-1))
+    if not check:
+        return -np.inf
 
     mka_err = ekp
     mkb_err = eks
     factor1 = mka_err*0
     factor2 = mkb_err*0
-    #for ii in range(nvar-fehon):
-    #  factor1 += ii*theta[ii]*mka**(ii-1)
-    #  factor2 += ii*theta[ii]*mkb**(ii-1)
-    for ii in range(nvar-fehon-1):
-        factor1 += (ii*2+1.)*theta[ii+1]*mka**(ii*2)
-        factor2 += (ii*2+1.)*theta[ii+1]*mkb**(ii*2)
+    for ii in range(nvar-fehon):
+      factor1 += ii*theta[ii]*mka**(ii-1)
+      factor2 += ii*theta[ii]*mkb**(ii-1)
+    #for ii in range(nvar-fehon-1):
+    #    factor1 += (ii*2+1.)*theta[ii+1]*mka**(ii*2)
+    #    factor2 += (ii*2+1.)*theta[ii+1]*mkb**(ii*2)
     mass1_err = np.abs((np.log(10.)*(factor1))*mass1*mka_err)
     mass2_err = np.abs((np.log(10.)*(factor2))*mass2*mkb_err)
     
