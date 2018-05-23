@@ -123,6 +123,7 @@ if nvar-fehon == 4:
     result3 = np.array([-0.64929964,-0.19901594,0.0011934525,0.0032461656])
 if nvar-fehon == 5:
     result3= np.array([-0.64372527,-0.20007154,-0.0037546659,0.0033291741,0.00027382806])
+    result3 = np.array([ -0.657781,-0.202363,   5.389494e-3,  5.499459e-3,-3.217666e-4])
 #result3 = np.array([-0.64875932,-0.22024753, 0.015585642,-0.0018301255])
 if fehon == 1:
     result = np.concatenate([result3,fehcoeff,result2])

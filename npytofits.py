@@ -8,7 +8,7 @@ import matplotlib
 import corner
 from matplotlib.backends.backend_pdf import PdfPages
 
-list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML2/*.npy"))
+list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*.npy"))
 
 for i in list:
     tmp = np.load(i)
@@ -19,7 +19,7 @@ for i in list:
 
 ## this part makes plots
 #list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*flat.npy"))
-list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML2/*flat.npy"))
+list = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*flat.npy"))
 #list2 = (glob.glob("/Users/andrewmann/Dropbox/Post_ML/*s.fits.npy"))
 #list = [list1,list2]
 #print list
