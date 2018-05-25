@@ -257,8 +257,8 @@ theta = result
 print 'make sure this is not -inf:'
 lnl = lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron)
 print lnl
-if ~np.isfinite(lnl):
-    sys.exit("bad starting conditions")
+#if np.isfinite(lnl):
+#    sys.exit("bad starting conditions")
 
 start_time = time.time()
 print time.strftime("%a, %d %b %Y %H:%M:%S", gmtime())
@@ -267,6 +267,7 @@ pos = [result + 1e-2*result*np.random.randn(ndim) for i in range(nwalkers)]
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, 
                                 args=(plxval, plxprior, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron),
                                threads=threads)
+
 ## burn-in and/or testing
 pos, prob, state = sampler.run_mcmc(pos, smallstep)
 print 'Finished burn/test phase runtime (minutes):'
@@ -285,7 +286,7 @@ arr = dat
 best = (like == max(like))
 a = arr[best,0:nvar]
 print a[0,:]
-print np.mean(arr[:,nvar-1]), np.std(arr[:,nvar-1])
+print np.mean(np.exp(arr[:,nvar-1])), np.std(np.exp(arr[:,nvar-1]))
 
 sampler.reset()
 start_time = time.time()
@@ -293,11 +294,10 @@ nsteps = bigstep
 thin = 500
 kwargs = {'thin': thin}
 print 'Starting run!'
-sampler.sample(pos, iterations=nsteps, **kwargs)
-#for i, result in enumerate(sampler.sample(pos, iterations=nsteps, **kwargs)):
-#    if (i+1) % 50000 == 0:
-#        print("{0:5.1%}".format(float(i) / nsteps)),
-#        ("{0:5.2%}".format((time.time() - start_time)/60))
+for i, result in enumerate(sampler.sample(pos, iterations=nsteps, **kwargs)):
+    if (i+1) % 50000 == 0:
+        print("{0:5.1%}".format(float(i) / nsteps)),
+        ("{0:5.2%}".format((time.time() - start_time)/60))
 print ' '
 print 'Done, runtime (hours):'
 print (time.time() - start_time)/3600
