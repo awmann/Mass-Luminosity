@@ -6,6 +6,7 @@ import numpy as np
 import time
 from time import gmtime, strftime
 import scipy.optimize as op
+import os
 
 #import pyfits
 
@@ -111,7 +112,7 @@ for i in range(0,len(ks)):
 #result1 = np.array([0.23323026,-0.10887911, 0.019990399, 0.00027286744, -0.00046073982])# Mann fit value
 #result_delf = [0.001*1.8,0.001*6.12,0.001*13.205,-6.2315*0.001,0.001*0.37529]
 result2 = plxval
-errfac = np.array([np.log(0.01)])
+errfac = np.array([np.log(0.02)])
 result3_base = np.array([ -0.647825172838, -0.209752211589,   0.00198928002858,  0.00559357629321, 0.000109819339823])
 result3_base = np.array([-0.64494970,-0.20761498,-0.0038724139,0.0055028137,0.00047754176])
 result3_base = np.array([ -0.64871221,-0.21016848,0.0023172133,0.0056601840,-0.00012339957])
@@ -156,7 +157,7 @@ mass1_err = (np.log(10)*(b+2*c*(mka-7.5)+3*d*(mka-7.5)**2+4*e*(mka-7.5)**3))*mas
 mass2_err = (np.log(10)*(b+2*c*(mkb-7.5)+3*d*(mkb-7.5)**2+4*e*(mkb-7.5)**3))*mass2*mkb_err
 
 model_err = np.sqrt(mass1_err**2+mass2_err**2)
-model_err2 = np.sqrt(mass1_err**2+mass2_err**2)#+(scat*mass1)**2+(scat*mass2)**2 )
+model_err2 = np.sqrt(mass1_err**2+mass2_err**2)
 model = mass1+mass2
 
 for i in range(0,len(empmass)):
@@ -308,12 +309,19 @@ adder = ''
 if fehon == 1: adder = '_feh'
 ## save out the relevant chains
 if bigstep > 10000:
-    np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_short', np.array(short))
-    np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
-    np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
-    np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
-    np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
-
+    if 'mann' not in os.getcwd():
+        np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_short', np.array(short))
+        np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
+        np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
+        np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
+        np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
+    else:
+        np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
+        np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
+        np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
+        np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
+        np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
+        
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_short.fits', short, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'.fits', sampler.chain, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_accept.fits', sampler.acceptance_fraction, clobber=True)
