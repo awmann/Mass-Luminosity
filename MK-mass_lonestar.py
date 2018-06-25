@@ -8,25 +8,33 @@ from time import gmtime, strftime
 import scipy.optimize as op
 import os
 
+## to do:
+## reload option (pick up where left off)
+
 #import pyfits
 
 ## nvar fehon smallstep largestep threads
 
 smallstep = 10000
 bigstep =  750000
-nvar = 6
+nvar = 7
 fehon = 0
 erron = 1
+walkers = 400
+
+## arg = nvar fehon erron smallstep bigstep threads
 
 if len(sys.argv) >= 2:
     nvar = int(sys.argv[1])
     fehon = int(sys.argv[2])
 if len(sys.argv) >= 5:
-    smallstep = float(sys.argv[3])
-    bigstep = float(sys.argv[4])
-threads = 72
+    erron = int(sys.argv[3])
 if len(sys.argv) >= 6:
-    threads = int(sys.argv[5])
+    smallstep = float(sys.argv[4])
+    bigstep = float(sys.argv[5])
+threads = 72
+if len(sys.argv) >= 7:
+    threads = int(sys.argv[6])
 
 if smallstep >= bigstep:
     tmp = bigstep
@@ -45,7 +53,21 @@ pi = 3.14159
 # In[ ]:
 num_lines = sum(1 for line in open('data2.txt'))
 nbin = num_lines-1 ## number of binaries in sample
-print nvar,fehon,erron,smallstep,bigstep,threads
+print 'Nvar:',nvar
+if fehon == 0: print 'no [Fe/H] term'
+if fehon == 1: print '[Fe/H] included'
+if fehon == 2: print '[Fe/H] and [Fe/H]*mk term'
+if erron == 0:
+    print 'no extra error term'
+if erron == 1:
+    print 'error added to model mass'
+if erron == 2:
+    print 'error added to plx'
+if erron == 3:
+    print 'error added to K mags'
+print 'burn-in:',smallstep
+print 'steps:',bigstep
+print 'cpu threads:',threads
 print 'Number of targets:',nbin
 
 ## read in delK, parallax
@@ -106,36 +128,48 @@ for i in range(0,len(ks)):
     kst = kp[i] + ktmp
     ekp[i] = np.std(kpt)
     eks[i] = np.std(kst)
+    
 
+errsub = 0
+if erron > 0:
+   errsub = 1
 
 #result_ben = np.array([0.2311,-0.1352, 0.0400, 0.0038, -0.0032]) # benedict fit value
 #result1 = np.array([0.23323026,-0.10887911, 0.019990399, 0.00027286744, -0.00046073982])# Mann fit value
 #result_delf = [0.001*1.8,0.001*6.12,0.001*13.205,-6.2315*0.001,0.001*0.37529]
 result2 = plxval
-errfac = np.array([np.log(0.02)])
-result3_base = np.array([ -0.647825172838, -0.209752211589,   0.00198928002858,  0.00559357629321, 0.000109819339823])
-result3_base = np.array([-0.64494970,-0.20761498,-0.0038724139,0.0055028137,0.00047754176])
-result3_base = np.array([ -0.64871221,-0.21016848,0.0023172133,0.0056601840,-0.00012339957])
-fehcoeff = np.array([0.01])
-if nvar-fehon-erron == 4:
-    result3 = np.array([-0.64929964,-0.19901594,0.0011934525,0.0032461656])
-if nvar-fehon-erron == 5:
-    result3 = np.array([ -0.64871221,-0.21016848,0.0023172133,0.0056601840,-0.00012339957])
-if nvar-fehon-erron == 6:
-    result3 = np.array([-0.64811677,-0.20157744, 0.00017210980,0.0040999402,-0.00011201641,1e-6])
-if nvar-fehon-erron == 7:
-    result3 = np.array([-0.64811677,-0.20157744, 0.00017210980,0.0040999402,-0.00011201641,1e-6,1e-6])
-if erron == 1:
+errfac = np.array([np.log(0.02)],dtype=np.float128)
+#result3_base = np.array([ -0.647825172838, -0.209752211589,   0.00198928002858,  0.00559357629321, 0.000109819339823])
+#result3_base = np.array([-0.64494970,-0.20761498,-0.0038724139,0.0055028137,0.00047754176])
+#result3_base = np.array([ -0.652530,-0.203478,0.004481558,0.005100981,-0.000298238])
+#result3_base = np.array([ -0.646609, -0.212461,  -0.002653431, 0.007948519, 0.0003689931,  -0.0001922619])
+result3_base = np.array([ -0.64831778, -0.21504067,  -7.0397849e-5, 0.0088852845, 0.00013451022,  -0.00024134927],dtype=np.float128)
+fehcoeff = np.array([0.037],dtype=np.float128)
+fehcoeff2 = np.array([-0.035],dtype=np.float128)
+if nvar-fehon-errsub == 4:
+    result3 = np.array([-0.646460,-0.196306,0.00007207469,0.004148834],dtype=np.float128)
+if nvar-fehon-errsub == 5:
+    result3 = np.array([ -0.65253050,-0.20347828,0.0044815579,0.0051009810,-0.00029823842],dtype=np.float128)
+if nvar-fehon-errsub == 6:
+    result3 = np.array([-0.64835236,-0.21556456, -0.00084600047,0.0083775937,0.00016819974,-0.00018743871],dtype=np.float128)
+if nvar-fehon-errsub == 7:
+    result3 = np.array([-0.64351569,-0.20943173, -0.0076165544,0.0061251049,0.0015557089,-3.0257191e-5,-7.0698029e-5],dtype=np.float128)
+#print result3
+if erron >= 1:
+    if fehon == 2:
+        result = np.concatenate([result3,fehcoeff,fehcoeff2,errfac,result2])
     if fehon == 1:
         result = np.concatenate([result3,fehcoeff,errfac,result2])
-    if fehon != 1:
+    if fehon == 0 :
         result = np.concatenate([result3,errfac,result2])
-if erron != 1:
+if erron == 0:
+    if fehon == 2:
+        result = np.concatenate([result3,fehcoeff,fehcoeff2,result2])
     if fehon == 1:
         result = np.concatenate([result3,fehcoeff,result2])
-    if fehon != 1:
+    if fehon == 0:
         result = np.concatenate([result3,result2])
-    
+
 # In[ ]:
 
 factor = (au**3.)*((4.0*np.pi**2.)/(g*msun))
@@ -148,56 +182,87 @@ e_empmass = empmass*np.sqrt((esmaper/smaper)**2 +9.0*(plxprior/plxval)**2)
 ## this is mostly for checking things are reasonable
 mka = kp - 5.0*(np.log10(1000.0/plxval)-1.)
 mkb = ks - 5.0*(np.log10(1000.0/plxval)-1.)
-a, b, c, d, e = result3_base
+a, b, c, d, e, aa = result3_base
 mka_err = ekp
 mkb_err = eks
-mass1 = 10.0**(a + b*(mka-7.5) + c*(mka-7.5)**2 + d*(mka-7.5)**3 + e*(mka-7.5)**4)
-mass2 = 10.0**(a + b*(mkb-7.5) + c*(mkb-7.5)**2 + d*(mkb-7.5)**3 + e*(mkb-7.5)**4)
-mass1_err = (np.log(10)*(b+2*c*(mka-7.5)+3*d*(mka-7.5)**2+4*e*(mka-7.5)**3))*mass1*mka_err
-mass2_err = (np.log(10)*(b+2*c*(mkb-7.5)+3*d*(mkb-7.5)**2+4*e*(mkb-7.5)**3))*mass2*mkb_err
-
+mass1 = 10.0**(a + b*(mka-7.5) + c*(mka-7.5)**2. + d*(mka-7.5)**3. + e*(mka-7.5)**4. + aa*(mka-7.5)**5.)
+mass2 = 10.0**(a + b*(mkb-7.5) + c*(mkb-7.5)**2. + d*(mkb-7.5)**3. + e*(mkb-7.5)**4. + aa*(mkb-7.5)**5.)
+mass1_err = (np.log(10)*(b+2*c*(mka-7.5)+3*d*(mka-7.5)**2+4*e*(mka-7.5)**3+5*aa*(mka-7.5)**4))*mass1*mka_err
+mass2_err = (np.log(10)*(b+2*c*(mkb-7.5)+3*d*(mkb-7.5)**2+4*e*(mkb-7.5)**3+5*aa*(mkb-7.5)**4))*mass2*mkb_err
+    
 model_err = np.sqrt(mass1_err**2+mass2_err**2)
 model_err2 = np.sqrt(mass1_err**2+mass2_err**2)
 model = mass1+mass2
 
-#for i in range(0,len(empmass)):
-#    print "{:16s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)),     "{0:.2f}".format(feh[i])#     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i])
-#print 'rough rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.)
+print 'Name  empmass err  modelmass  err   mka   mkb  mass1 mass2 diff(sig)  feh '
+for i in range(0,len(empmass)):
+    print "{:16s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)),     "{0:.2f}".format(feh[i])#     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i])
+print 'rough rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.)
 
+print 'mean diff, weighted mean diff: ',np.mean(empmass-model),np.average(empmass-model,weights=(1./np.sqrt(e_empmass**2+model_err**2)))
 
-# In[ ]:
 
 def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
-    zp = 7.5e0
+    errsub = 0
+    if erron > 0:
+        errsub = 1
+        
+    zp = 7.5
     au = 1.496e13
     msun = 1.989e33
     g = 6.6743e-8 
-    #a, b, c, d, e, f = theta[0:nvar]
     mplx = theta[nvar:theta.size]
+
     if np.min(mplx) <= 0:
         return -np.inf
     factor = (au**3.)*((4.0*np.pi**2.)/(g*msun))
     empmass = factor*smaper/mplx**3
-    e_empmass = empmass*(esmaper/smaper)**2
+    e_empmass = empmass*(esmaper/smaper)
+    #if erron == 2: ## error as extra parallax (but in mass only?)
+    #    e_empmass = empmass*np.sqrt((esmaper/smaper)**2 + 9.0*(np.exp(theta[nvar-1])**2))
+    
     mka = kp - 5.0*(np.log10(1000.0/mplx)-1.) - zp
     mkb = ks - 5.0*(np.log10(1000.0/mplx)-1.) - zp
+    if np.min(mka) <= -8:
+        print np.min(mka)
+        return -np.inf
     factor1 = mka*0
     factor2 = mkb*0
-    for ii in range(nvar-fehon-erron):
+    for ii in range(nvar-fehon-errsub):
         factor1 += theta[ii]*mka**(ii)
         factor2 += theta[ii]*mkb**(ii)
+        
+    if np.max(factor1) > 1:
+        return -np.inf
+    if np.max(factor2) > 1:
+        return -np.inf
+        
     mass1 = 10.0**(factor1)
     mass2 = 10.0**(factor2)
+    mass1_base = mass1
+    mass2_base = mass2
+    if np.min(mass1_base) < 0 or np.min(mass2_base) < 0 or np.max(mass1_base) > 1.0 or np.max(mass2_base) > 1.0:
+        return -np.inf
+        
     if fehon == 1:
-        mass1*=(1+theta[nvar-1-erron]*feh)
-        mass2*=(1+theta[nvar-1-erron]*feh)
+        f = theta[nvar-fehon-errsub]
+        g = 0.0
+        mass1*=(1.+f*feh)
+        mass2*=(1.+f*feh)
+    if fehon == 2:
+        f = theta[nvar-fehon-errsub]
+        g = theta[nvar-fehon-errsub+1]
+        mass1*=(1.+(f+g*mka)*feh)
+        mass2*=(1.+(f+g*mkb)*feh)
     if np.min(mass1) <= 0 or np.min(mass2) <= 0:
         return -np.inf
-    
+
+    if np.min(mass1) < 0 or np.min(mass2) < 0 or np.max(mass1) > 1.0 or np.max(mass2) > 1.0:
+        return -np.inf
     ## this is where we check to see if the relation always does brighter=higher mass (if not return -np.inf)
-    mk = np.linspace(4.0,11.1,100) - zp
+    mk = np.linspace(4.0,11.5,100) - zp
     tmp = mk*0
-    for ii in range(nvar-fehon-erron):
+    for ii in range(nvar-fehon-errsub):
         tmp += theta[ii]*mk**ii
     l = 10.0**tmp
     check = all(l[i] >= l[i+1] for i in xrange(len(l)-1))
@@ -206,14 +271,23 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
 
     mka_err = ekp
     mkb_err = eks
+    if erron == 3: ## add error to absolute magnitude
+        mka_err = np.sqrt(ekp**2+(np.exp(theta[nvar-1])**2))
+        mkb_err = np.sqrt(eks**2+(np.exp(theta[nvar-1])**2))
+
+    e_feh = 0.04# global 0.04 (relative!) uncertainties on [Fe/H]
     factor1 = mka_err*0
     factor2 = mkb_err*0
     for ii in range(nvar-fehon-erron):
       factor1 += ii*theta[ii]*mka**(ii-1)
       factor2 += ii*theta[ii]*mkb**(ii-1)
-    mass1_err = np.abs((np.log(10.)*(factor1))*mass1*mka_err)
-    mass2_err = np.abs((np.log(10.)*(factor2))*mass2*mkb_err)
-    
+    if fehon == 0:
+        mass1_err = np.abs((np.log(10.)*(factor1))*mass1*mka_err)
+        mass2_err = np.abs((np.log(10.)*(factor2))*mass2*mkb_err)
+    if fehon >= 1:
+        mass1_err = np.sqrt((mass1_base*(g*feh+np.log(10.)*factor1*(1.+f*feh+g*mka*feh)))**2*mka_err**2 + (f+g*mka)**2*e_feh**2) 
+        mass2_err = np.sqrt((mass2_base*(g*feh+np.log(10.)*factor2*(1.+f*feh+g*mkb*feh)))**2*mkb_err**2 + (f+g*mkb)**2*e_feh**2) 
+
     model_err = np.sqrt(mass1_err**2+mass2_err**2)
     model = mass1+mass2
     if erron == 1:
@@ -221,16 +295,21 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2 + model**2*np.exp(2*lnf))
     if erron != 1:
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2)
+    if np.min(inv_sigma2) <= 0:
+        return -np.inf
+    #print empmass[0],model[0],e_empmass[0],model_err[0],1.0/np.sqrt(inv_sigma2[0]),(model[0]-empmass[0]),(model[0]-empmass[0])*np.sqrt(inv_sigma2[0])
     return -0.5*(np.sum((empmass-model)**2*inv_sigma2 - np.log(inv_sigma2)))
 
 # In[ ]:
 
-def lnprior(theta, plxval, plxprior, nvar):
+def lnprior(theta, plxval, plxprior, nvar, erron):
     mplx = theta[nvar:theta.size]
     lp = 0
+    if erron == 2:
+        plxprior = np.sqrt(plxprior**2 + (plxval*(np.exp(theta[nvar-1]))**2))
     if np.min(mplx) <= 0:
         return -np.inf
-    lp += np.sum(((mplx-plxval)**2)/(plxprior)**2)
+    lp += np.sum(((mplx-plxval)**2)/(plxprior**2))
     lp*=(-0.5)
     if not np.isfinite(lp):
         return 0.0
@@ -240,7 +319,7 @@ def lnprior(theta, plxval, plxprior, nvar):
 # In[ ]:
 
 def lnprob(theta, plxval, plxprior, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
-    lp = lnprior(theta, plxval, plxprior, nvar)
+    lp = lnprior(theta, plxval, plxprior, nvar, erron)
     if not np.isfinite(lp):
         return -np.inf
     like = lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron)
@@ -262,7 +341,7 @@ print lnl
 
 start_time = time.time()
 print time.strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-ndim, nwalkers = result.size, 400
+ndim, nwalkers = result.size, walkers
 pos = [result + 1e-2*result*np.random.randn(ndim) for i in range(nwalkers)]
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, 
                                 args=(plxval, plxprior, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron),
@@ -287,6 +366,7 @@ best = (like == max(like))
 a = arr[best,0:nvar]
 print a[0,:]
 print np.mean(np.exp(arr[:,nvar-1])), np.std(np.exp(arr[:,nvar-1]))
+#print np.mean(np.exp(arr[:,nvar-2])), np.std(np.exp(arr[:,nvar-2]))
 
 sampler.reset()
 start_time = time.time()
@@ -305,25 +385,47 @@ print("Mean acceptance fraction: {0:.3f}".format(np.mean(sampler.acceptance_frac
 
 short = sampler.chain[:,:,0:nvar]
 adder = ''
-if fehon == 1: adder = '_feh'
+if fehon == 2:
+    adder = '_feh2'
+    if erron == 1:
+        adder = '_feh2_er1'
+    if erron == 2:
+        adder = '_feh2_er2'
+    if erron == 3:
+        adder = '_feh2_er3'
+if fehon == 1:
+    adder = '_feh'
+    if erron == 1:
+        adder = '_feh_er1'
+    if erron == 2:
+        adder = '_feh_er2'
+    if erron == 3:
+        adder = '_feh_er3'
+if fehon == 0:
+    adder = ''
+    if erron == 1:
+        adder = '_er1'
+    if erron == 2:
+        adder = '_er2'
+    if erron == 3:
+        adder = '_er3'
 ## save out the relevant chains
-if bigstep > 10000:
-    if 'mann' not in os.getcwd():
+if bigstep > 1000:
+    if '/Users/' not in os.getcwd():
+        print 'saving in work'
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_short', np.array(short))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
     else:
+        print 'saving in current directory'
         np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
         np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
         np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
         np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
         np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
-        
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_short.fits', short, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'.fits', sampler.chain, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_accept.fits', sampler.acceptance_fraction, clobber=True)
 #pyfits.writeto('Mk-Mass_log_emcee'+str(nvar-1)+adder+'_lnprob.fits', sampler.lnprobability, clobber=True)
-
-
