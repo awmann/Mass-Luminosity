@@ -138,14 +138,20 @@ if erron > 0:
 #result1 = np.array([0.23323026,-0.10887911, 0.019990399, 0.00027286744, -0.00046073982])# Mann fit value
 #result_delf = [0.001*1.8,0.001*6.12,0.001*13.205,-6.2315*0.001,0.001*0.37529]
 result2 = plxval
-errfac = np.array([np.log(0.02)],dtype=np.float128)
 #result3_base = np.array([ -0.647825172838, -0.209752211589,   0.00198928002858,  0.00559357629321, 0.000109819339823])
 #result3_base = np.array([-0.64494970,-0.20761498,-0.0038724139,0.0055028137,0.00047754176])
 #result3_base = np.array([ -0.652530,-0.203478,0.004481558,0.005100981,-0.000298238])
 #result3_base = np.array([ -0.646609, -0.212461,  -0.002653431, 0.007948519, 0.0003689931,  -0.0001922619])
 result3_base = np.array([ -0.64831778, -0.21504067,  -7.0397849e-5, 0.0088852845, 0.00013451022,  -0.00024134927],dtype=np.float128)
+if erron == 1:
+    errfac = np.array([np.log(0.01)],dtype=np.float128)
+if erron == 2:
+    errfac = np.array([np.log(0.007)],dtype=np.float128)
+if erron == 3:
+    errfac = np.array([np.log(0.070)],dtype=np.float128)
+    
 fehcoeff = np.array([0.037],dtype=np.float128)
-fehcoeff2 = np.array([-0.035],dtype=np.float128)
+fehcoeff2 = np.array([-0.041],dtype=np.float128)
 if nvar-fehon-errsub == 4:
     result3 = np.array([-0.646460,-0.196306,0.00007207469,0.004148834],dtype=np.float128)
 if nvar-fehon-errsub == 5:
@@ -274,8 +280,10 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     if erron == 3: ## add error to absolute magnitude
         mka_err = np.sqrt(ekp**2+(np.exp(theta[nvar-1])**2))
         mkb_err = np.sqrt(eks**2+(np.exp(theta[nvar-1])**2))
-
-    e_feh = 0.04# global 0.04 (relative!) uncertainties on [Fe/H]
+    if fehon >= 1:
+        e_feh = 0.03# global 0.04 (relative!) uncertainties on [Fe/H]
+    else:
+        e_feh = 0.0
     factor1 = mka_err*0
     factor2 = mkb_err*0
     for ii in range(nvar-fehon-erron):
@@ -285,19 +293,20 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
         mass1_err = np.abs((np.log(10.)*(factor1))*mass1*mka_err)
         mass2_err = np.abs((np.log(10.)*(factor2))*mass2*mkb_err)
     if fehon >= 1:
-        mass1_err = np.sqrt((mass1_base*(g*feh+np.log(10.)*factor1*(1.+f*feh+g*mka*feh)))**2*mka_err**2 + (f+g*mka)**2*e_feh**2) 
-        mass2_err = np.sqrt((mass2_base*(g*feh+np.log(10.)*factor2*(1.+f*feh+g*mkb*feh)))**2*mkb_err**2 + (f+g*mkb)**2*e_feh**2) 
+        mass1_err = np.sqrt((mass1_base*(g*feh+np.log(10.)*factor1*(1.+f*feh+g*mka*feh)))**2*mka_err**2 + ((f+g*mka)*mass1_base)**2*e_feh**2) 
+        mass2_err = np.sqrt((mass2_base*(g*feh+np.log(10.)*factor2*(1.+f*feh+g*mkb*feh)))**2*mkb_err**2 + ((f+g*mkb)*mass2_base)**2*e_feh**2)
 
     model_err = np.sqrt(mass1_err**2+mass2_err**2)
     model = mass1+mass2
     if erron == 1:
         lnf = theta[nvar-1]
+        if np.exp(lnf) < 0.001:
+            return -np.inf
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2 + model**2*np.exp(2*lnf))
     if erron != 1:
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2)
     if np.min(inv_sigma2) <= 0:
         return -np.inf
-    #print empmass[0],model[0],e_empmass[0],model_err[0],1.0/np.sqrt(inv_sigma2[0]),(model[0]-empmass[0]),(model[0]-empmass[0])*np.sqrt(inv_sigma2[0])
     return -0.5*(np.sum((empmass-model)**2*inv_sigma2 - np.log(inv_sigma2)))
 
 # In[ ]:

@@ -21,9 +21,9 @@ for i in list:
 
 
 ## this part makes plots
-list = (glob.glob("../Post_ML/*flat.npy"))
+list = (glob.glob("../Post_ML/Mk-M_8_feh_er1*flat.npy"))
 #list = (glob.glob("../*feh2*er1*flat.npy"))
-#list2 = (glob.glob("../Post_ML/*s.fits.npy"))
+#list2 = (glob.glob("../Post_ML/*flat.npy"))
 #list = [list1,list2]
 #print list
 
@@ -108,6 +108,7 @@ for i in list:
             flat[:,4] = np.exp(flat[:,4])/dif
     print flat.shape
     print labels,pdfname
+    
     fig = corner.corner(flat, labels=labels, show_titles=True, title_kwargs={"fontsize": 14},title_fmt='.5f',quantiles=(0.16, 0.84), levels=[(1-np.exp(-0.5)),(1-np.exp(-2)),(1-np.exp(-4.5))])
     pp = PdfPages(pdfname)
     pp.savefig(fig)
