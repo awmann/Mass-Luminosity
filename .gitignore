@@ -1,3 +1,4 @@
 *.fits
 *.txt
+*.pdf
 .DS_Store
