@@ -212,7 +212,10 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     errsub = 0
     if erron > 0:
         errsub = 1
-        
+        lnf = theta[nvar-1]
+        if np.exp(lnf) < 0.001:
+            return -np.inf
+
     zp = 7.5
     au = 1.496e13
     msun = 1.989e33
@@ -229,8 +232,8 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     
     mka = kp - 5.0*(np.log10(1000.0/mplx)-1.) - zp
     mkb = ks - 5.0*(np.log10(1000.0/mplx)-1.) - zp
-    if np.min(mka) <= -8:
-        print np.min(mka)
+    if np.min(mka) <= -9:
+        #print np.min(mka)
         return -np.inf
     factor1 = mka*0
     factor2 = mkb*0
@@ -281,7 +284,7 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
         mka_err = np.sqrt(ekp**2+(np.exp(theta[nvar-1])**2))
         mkb_err = np.sqrt(eks**2+(np.exp(theta[nvar-1])**2))
     if fehon >= 1:
-        e_feh = 0.03# global 0.04 (relative!) uncertainties on [Fe/H]
+        e_feh = 0.04# global 0.04 (relative!) uncertainties on [Fe/H]
     else:
         e_feh = 0.0
     factor1 = mka_err*0
@@ -299,9 +302,6 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     model_err = np.sqrt(mass1_err**2+mass2_err**2)
     model = mass1+mass2
     if erron == 1:
-        lnf = theta[nvar-1]
-        if np.exp(lnf) < 0.001:
-            return -np.inf
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2 + model**2*np.exp(2*lnf))
     if erron != 1:
         inv_sigma2 = 1.0/(e_empmass**2+model_err**2)

@@ -12,18 +12,18 @@ from matplotlib.backends.backend_pdf import PdfPages
 list = (glob.glob("../Post_ML/*.npy"))
 #list = (glob.glob("../Post_ML/*feh2*.npy"))
 
-for i in list:
-    file = i.replace('.npy','.fits')
-    if not os.path.isfile(file):
-        print file
-        tmp = np.load(i)
-        pyfits.writeto(file, tmp, clobber=True)
+#for i in list:
+#    file = i.replace('.npy','.fits')
+#    if not os.path.isfile(file):
+#        print file
+#        tmp = np.load(i)
+#        pyfits.writeto(file, tmp, clobber=True)
 
 
 ## this part makes plots
-list = (glob.glob("../Post_ML/Mk-M_8_feh_er1*flat.npy"))
+#list = (glob.glob("../Post_ML/Mk-M_10_feh2_er2*flat.npy"))
 #list = (glob.glob("../*feh2*er1*flat.npy"))
-#list2 = (glob.glob("../Post_ML/*flat.npy"))
+list = (glob.glob("../Post_ML/*flat.npy"))
 #list = [list1,list2]
 #print list
 
@@ -35,13 +35,13 @@ for i in list:
     adder = '?'
     dif = 1.0
     if i.find("er1") != -1:
-        adder = '_eMs'
+        adder = '_eMass'
         dif = 1.0#np.sqrt(2)
     if i.find("er2") != -1:
-        adder = '_eplx'
+        adder = '_ePlx'
         dif = np.sqrt(2)/3.
     if i.find("er3") != -1:
-        adder = '_eMK'
+        adder = '_eMKs'
         dif = 1.0
     if i.find("feh2_") != -1:
         if i.find("10") != -1:
@@ -108,8 +108,15 @@ for i in list:
             flat[:,4] = np.exp(flat[:,4])/dif
     print flat.shape
     print labels,pdfname
-    
-    fig = corner.corner(flat, labels=labels, show_titles=True, title_kwargs={"fontsize": 14},title_fmt='.5f',quantiles=(0.16, 0.84), levels=[(1-np.exp(-0.5)),(1-np.exp(-2)),(1-np.exp(-4.5))])
-    pp = PdfPages(pdfname)
-    pp.savefig(fig)
-    pp.close()
+    if np.isfinite(np.median(flat)):
+        fig = corner.corner(flat, labels=labels, show_titles=True, title_kwargs={"fontsize": 14},title_fmt='.5f',quantiles=(0.16, 0.84), levels=[(1-np.exp(-0.5)),(1-np.exp(-2)),(1-np.exp(-4.5))])
+        pp = PdfPages(pdfname)
+        pp.savefig(fig)
+        pp.close()
+    else:
+        print 'failed',i
+        #fig = corner.corner(flat[0:8], labels=labels[0:8], show_titles=True, title_kwargs={"fontsize": 14},title_fmt='.5f',quantiles=(0.16, 0.84), levels=[(1-np.exp(-0.5)),(1-np.exp(-2)),(1-np.exp(-4.5))])
+        #pp = PdfPages(pdfname)
+        #pp.savefig(fig)
+        #pp.close()
+

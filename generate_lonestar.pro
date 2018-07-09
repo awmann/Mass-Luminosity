@@ -2,14 +2,14 @@
 
 PRO generate_lonestar
 
-  smallstep =   20000
-  largestep =  750000
+  smallstep =   30000
+  largestep = 1000000
   ;;threads = 72
 
   close,/all
   openw,13,'batch.sh'
-  for err = 1,3 do begin
-     for fehon = 1,2 do begin
+  for err = 1,1 do begin
+     for fehon = 0,2 do begin
         for order = 5,5 do begin
            if err ge 1 then erradd = 1 else erradd = 0
            params = order+fehon+erradd+1
