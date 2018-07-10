@@ -213,7 +213,7 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     if erron > 0:
         errsub = 1
         lnf = theta[nvar-1]
-        if np.exp(lnf) < 0.001:
+        if np.exp(lnf) < 0.002:
             return -np.inf
 
     zp = 7.5
@@ -281,8 +281,8 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     mka_err = ekp
     mkb_err = eks
     if erron == 3: ## add error to absolute magnitude
-        mka_err = np.sqrt(ekp**2+(np.exp(theta[nvar-1])**2))
-        mkb_err = np.sqrt(eks**2+(np.exp(theta[nvar-1])**2))
+        mka_err = np.sqrt(ekp**2+(np.exp(2.*lnf)))
+        mkb_err = np.sqrt(eks**2+(np.exp(2.*lnf)))
     if fehon >= 1:
         e_feh = 0.04# global 0.04 (relative!) uncertainties on [Fe/H]
     else:
