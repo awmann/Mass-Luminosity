@@ -2,15 +2,15 @@
 
 PRO generate_lonestar
 
-  smallstep =   30000
-  largestep = 1000000
+  smallstep =   50000
+  largestep =  750000
   ;;threads = 72
 
   close,/all
   openw,13,'batch.sh'
   for err = 1,1 do begin
      for fehon = 0,2 do begin
-        for order = 5,5 do begin
+        for order = 4,6 do begin
            if err ge 1 then erradd = 1 else erradd = 0
            params = order+fehon+erradd+1
            a = strtrim(string(params,format="(I2)"),2)
