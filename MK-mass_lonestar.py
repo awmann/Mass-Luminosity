@@ -19,6 +19,7 @@ smallstep = 10000
 bigstep =  750000
 nvar = 7
 fehon = 0
+halphaon = 1
 erron = 1
 walkers = 400
 
@@ -30,8 +31,8 @@ if len(sys.argv) >= 2:
 if len(sys.argv) >= 5:
     erron = int(sys.argv[3])
 if len(sys.argv) >= 6:
-    smallstep = float(sys.argv[4])
-    bigstep = float(sys.argv[5])
+    smallstep = np.float(sys.argv[4])
+    bigstep = np.float(sys.argv[5])
 threads = 72
 if len(sys.argv) >= 7:
     threads = int(sys.argv[6])
@@ -48,7 +49,6 @@ g = 6.6743e-8
 msun = 1.989e33
 au = 1.496e13
 pi = 3.14159
-
 
 # In[ ]:
 num_lines = sum(1 for line in open('data2.txt'))
@@ -79,6 +79,7 @@ name = strs = ['']*nbin
 k = np.zeros(nbin)
 ek = np.zeros(nbin)
 feh = np.zeros(nbin)
+halpha = np.zeroes(nbin)
 f = open('data2.txt','r')
 header1 = f.readline()
 i=0
@@ -93,6 +94,7 @@ for line in f:
     k[i] = float(columns[5])
     ek[i] = float(columns[6])
     feh[i] = float(columns[8])
+    halpha[i] = float(columns[9])
     i+=1
 f.close()
 
@@ -129,7 +131,9 @@ for i in range(0,len(ks)):
     ekp[i] = np.std(kpt)
     eks[i] = np.std(kst)
     
-
+print np.median(ekp),np.min(ekp),np.max(ekp)
+print np.median(eks),np.min(eks),np.max(eks)
+    
 errsub = 0
 if erron > 0:
    errsub = 1
@@ -142,7 +146,7 @@ result2 = plxval
 #result3_base = np.array([-0.64494970,-0.20761498,-0.0038724139,0.0055028137,0.00047754176])
 #result3_base = np.array([ -0.652530,-0.203478,0.004481558,0.005100981,-0.000298238])
 #result3_base = np.array([ -0.646609, -0.212461,  -0.002653431, 0.007948519, 0.0003689931,  -0.0001922619])
-result3_base = np.array([ -0.64831778, -0.21504067,  -7.0397849e-5, 0.0088852845, 0.00013451022,  -0.00024134927],dtype=np.float128)
+result3_base = np.array([ -0.63770, -0.21125,  -5.0137e-3, 8.6686e-3, 5.7932e-4,  -2.7138e-4],dtype=np.float128)
 if erron == 1:
     errfac = np.array([np.log(0.01)],dtype=np.float128)
 if erron == 2:
@@ -196,14 +200,19 @@ mass2 = 10.0**(a + b*(mkb-7.5) + c*(mkb-7.5)**2. + d*(mkb-7.5)**3. + e*(mkb-7.5)
 mass1_err = (np.log(10)*(b+2*c*(mka-7.5)+3*d*(mka-7.5)**2+4*e*(mka-7.5)**3+5*aa*(mka-7.5)**4))*mass1*mka_err
 mass2_err = (np.log(10)*(b+2*c*(mkb-7.5)+3*d*(mkb-7.5)**2+4*e*(mkb-7.5)**3+5*aa*(mkb-7.5)**4))*mass2*mkb_err
     
+sys = 0.018
+sys2 = 0.05
 model_err = np.sqrt(mass1_err**2+mass2_err**2)
 model_err2 = np.sqrt(mass1_err**2+mass2_err**2)
+model_err3 = np.sqrt(mass1_err**2+mass2_err**2+(sys*mass1)**2+(sys*mass2)**2)
 model = mass1+mass2
 
-print 'Name  empmass err  modelmass  err   mka   mkb  mass1 mass2 diff(sig)  feh '
+print 'Name  empmass err  modelmass  err   mka   mkb  mass1 mass2 diff(sig) diff(sigwithsys) feh '
 for i in range(0,len(empmass)):
-    print "{:16s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)),     "{0:.2f}".format(feh[i])#     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i])
-print 'rough rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.)
+    print "{:16s}".format(name[i]),     "{0:.3f}".format(empmass[i]),"{0:.3f}".format(e_empmass[i]),     "{0:.4f}".format(model[i]),"{0:.4f}".format(model_err[i]),     "{0:.4f}".format(mka[i]),"{0:.4f}".format(mkb[i]),     "{0:.3f}".format(mass1[i]),"{0:.3f}".format(mass2[i]),     "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err[i]**2)), "{0:.1f}".format(np.abs(empmass[i]-model[i])/np.sqrt(e_empmass[i]**2+model_err3[i]**2)),    "{0:.2f}".format(feh[i])#     "{0:.3f}".format(ekp[i]),"{0:.3f}".format(eks[i])
+print 'rough rchi^2:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2))/(empmass.size-5.),(empmass.size-5.)
+print 'rough rchi^2 with 1.8% sys:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2+(mass1*sys)**2+(mass2*sys)**2))/(empmass.size-5.)
+print 'rough rchi^2 with 5% sys:',np.sum((empmass-model)**2/(e_empmass**2+model_err**2+(mass1*sys)**2+(mass2*sys2)**2))/(empmass.size-5.)
 
 print 'mean diff, weighted mean diff: ',np.mean(empmass-model),np.average(empmass-model,weights=(1./np.sqrt(e_empmass**2+model_err**2)))
 
@@ -302,9 +311,12 @@ def lnlike(theta, smaper, esmaper, kp, ks, ekp, eks, feh, nvar, fehon, erron):
     model_err = np.sqrt(mass1_err**2+mass2_err**2)
     model = mass1+mass2
     if erron == 1:
-        inv_sigma2 = 1.0/(e_empmass**2+model_err**2 + model**2*np.exp(2*lnf))
-    if erron != 1:
-        inv_sigma2 = 1.0/(e_empmass**2+model_err**2)
+        model_err = np.sqrt(mass1_err**2+mass2_err**2 + model**2*np.exp(2*lnf))#mass1**2*np.exp(2*lnf) + mass2**2*np.exp(2*lnf))
+    inv_sigma2 = 1.0/(e_empmass**2+model_err**2)
+    #if erron == 1:
+    #    inv_sigma2 = 1.0/(e_empmass**2+model_err**2 + model**2*np.exp(2*lnf))
+    #if erron != 1:
+    #    inv_sigma2 = 1.0/(e_empmass**2+model_err**2)
     if np.min(inv_sigma2) <= 0:
         return -np.inf
     return -0.5*(np.sum((empmass-model)**2*inv_sigma2 - np.log(inv_sigma2)))
@@ -420,14 +432,21 @@ if fehon == 0:
         adder = '_er3'
 ## save out the relevant chains
 if bigstep > 1000:
-    if '/Users/' not in os.getcwd():
+    if '/longleaf/' in os.getcwd():
+        print 'saving in current directory'
+        np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
+        np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
+        np.save('Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
+        np.save('Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
+        np.save('Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
+    if '/lonestar/' in os.getcwd():
         print 'saving in work'
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_short', np.array(short))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_flat', np.array(sampler.flatchain))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_lnprob', np.array(sampler.lnprobability))
         np.save('/work/03344/amann/lonestar/ML/Mk-M_'+str(nvar)+adder+'_accept',np.array(sampler.acceptance_fraction))
-    else:
+    if '/Users/' in os.getcwd():
         print 'saving in current directory'
         np.save('Mk-M_'+str(nvar)+adder+'_short', np.array(short))
         np.save('Mk-M_'+str(nvar)+adder+'_chain', np.array(sampler.chain))
